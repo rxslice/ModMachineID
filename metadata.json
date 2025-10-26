@@ -1,0 +1,5 @@
+{
+  "name": "SpoofID Builder",
+  "description": "A tool to generate and manage unique machine IDs for development and testing purposes. This application simulates ID spoofing in a secure web-based environment.",
+  "requestFramePermissions": []
+}

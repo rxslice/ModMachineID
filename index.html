@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpoofID Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'primary': '#0a0a0a',
+            'secondary': '#1a1a1a',
+            'accent': '#4f46e5',
+            'accent-hover': '#4338ca',
+            'text-primary': '#f5f5f5',
+            'text-secondary': '#a3a3a3',
+            'success': '#22c55e',
+            'danger': '#ef4444',
+          },
+        },
+      },
+    }
+  </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+  }
+}
+</script>
+</head>
+<body class="bg-primary text-text-primary antialiased">
+  <div id="root"></div>
+  <script type="module">
+    import React, { useState, useEffect, useCallback, useRef } from 'react';
+    import ReactDOM from 'react-dom/client';
+
+    // --- All components and types are now in this single file ---
+
+    // --- From components/icons.tsx ---
+    const ShieldCheckIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.917l9 2.5 9-2.5a12.02 12.02 0 00-2.382-9.971z' })
+      )
+    );
+    const UserCircleIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z' })
+      )
+    );
+    const CopyIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z' })
+      )
+    );
+    const TrashIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' })
+      )
+    );
+    const PowerIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M5.636 5.636a9 9 0 1012.728 0M12 3v9' })
+      )
+    );
+    const CheckCircleIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' })
+      )
+    );
+    const PencilIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z' })
+      )
+    );
+    const PlusCircleIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z' })
+      )
+    );
+    const ChevronDownIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M19 9l-7 7-7-7' })
+      )
+    );
+    const DownloadIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' })
+      )
+    );
+    const CodeIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' })
+      )
+    );
+    const RocketLaunchIcon = ({ className }) => (
+        React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M15.59 14.37a6 6 0 01-5.84 7.38v-4.82m5.84-2.56a6 6 0 01-2.56 5.84m-2.56-5.84a6 6 0 017.38-5.84m-7.38 5.84L5.63 5.63m1.41 9.9a6 6 0 01-5.84-7.38m5.84 7.38L14.37 15.6m-4.24-5.66l9.9-1.41m-9.9 1.41L5.63 5.63' })
+        )
+    );
+    const XMarkIcon = ({ className }) => (
+      React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', className, fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2 },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', d: 'M6 18L18 6M6 6l12 12' })
+      )
+    );
+
+
+    // --- From components/Header.tsx ---
+    const Header = () => {
+      return React.createElement('header', { className: 'bg-secondary/50 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-10' },
+        React.createElement('div', { className: 'container mx-auto px-4 md:px-8' },
+          React.createElement('div', { className: 'flex justify-between items-center h-16' },
+            React.createElement('div', { className: 'flex items-center space-x-3' },
+              React.createElement(ShieldCheckIcon, { className: 'h-8 w-8 text-accent' }),
+              React.createElement('h1', { className: 'text-xl font-bold tracking-wider text-text-primary' }, 'Developer Asset Manager')
+            ),
+            React.createElement('div', { className: 'flex items-center space-x-2 text-sm text-text-secondary' },
+              React.createElement(UserCircleIcon, { className: 'h-5 w-5' }),
+              React.createElement('span', null, 'TestUser')
+            )
+          )
+        )
+      );
+    };
+
+    // --- From components/CurrentIDCard.tsx ---
+    const CurrentIDCard = ({ currentId, isSpoofing, onStopSpoofing, realId }) => {
+      const [copied, setCopied] = useState(false);
+      const handleCopy = () => {
+        navigator.clipboard.writeText(currentId);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+      return React.createElement('div', { className: 'bg-secondary border border-gray-800 rounded-lg p-6 shadow-lg' },
+        React.createElement('div', { className: 'flex justify-between items-center mb-4' },
+          React.createElement('h2', { className: 'text-lg font-semibold text-text-primary' }, 'Current Machine ID'),
+          React.createElement('span', { className: `px-3 py-1 text-xs font-bold rounded-full ${isSpoofing ? 'bg-success/20 text-success' : 'bg-gray-700 text-text-secondary'}` }, isSpoofing ? 'SIMULATED' : 'REAL')
+        ),
+        React.createElement('div', { className: 'flex items-center bg-primary p-3 rounded-md border border-gray-700 mb-4' },
+          React.createElement('p', { className: 'text-sm text-text-secondary flex-grow truncate mr-2 font-mono' }, currentId),
+          React.createElement('button', { onClick: handleCopy, className: 'text-text-secondary hover:text-white transition-colors duration-200' },
+            copied ? React.createElement(CheckCircleIcon, { className: 'h-5 w-5 text-success' }) : React.createElement(CopyIcon, { className: 'h-5 w-5' })
+          )
+        ),
+        isSpoofing && React.createElement('button', { 
+            onClick: onStopSpoofing,
+            className: 'w-full flex items-center justify-center bg-danger/20 hover:bg-danger/40 text-danger font-bold py-2 px-4 rounded-md transition-colors duration-200'
+        }, React.createElement(PowerIcon, { className: 'h-5 w-5 mr-2' }), 'Stop Simulation'),
+        React.createElement('p', { className: 'text-xs text-gray-500 mt-4' },
+          'Your real ID is: ', React.createElement('span', { className: 'font-mono text-gray-400' }, `${realId.substring(0, 18)}...`)
+        )
+      );
+    };
+    
+    // --- From components/IDGenerator.tsx ---
+    const IDGenerator = ({ onGenerate }) => {
+      const [count, setCount] = useState(1);
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (count > 0 && count <= 100) {
+          onGenerate(count);
+          setCount(1);
+        }
+      };
+      return React.createElement('div', { className: 'bg-secondary border border-gray-800 rounded-lg p-6 shadow-lg' },
+        React.createElement('h2', { className: 'text-lg font-semibold text-text-primary mb-4' }, 'Asset Generator'),
+        React.createElement('form', { onSubmit: handleSubmit, className: 'flex flex-col space-y-4' },
+          React.createElement('div', null,
+            React.createElement('label', { htmlFor: 'id-count', className: 'block text-sm font-medium text-text-secondary mb-1' }, 'Number of IDs to generate'),
+            React.createElement('input', { type: 'number', id: 'id-count', min: '1', max: '100', value: count, onChange: (e) => setCount(parseInt(e.target.value, 10)), className: 'w-full bg-primary border border-gray-700 rounded-md p-2 text-text-primary focus:ring-accent focus:border-accent' })
+          ),
+          React.createElement('button', { type: 'submit', className: 'w-full flex items-center justify-center bg-accent hover:bg-accent-hover text-white font-bold py-2 px-4 rounded-md transition-colors duration-200' },
+            React.createElement(PlusCircleIcon, { className: 'h-5 w-5 mr-2' }),
+            'Generate IDs'
+          )
+        ),
+        React.createElement('p', { className: 'text-xs text-gray-500 mt-4' }, 'Generates standard UUIDv4 identifiers for local testing scripts and configurations.')
+      );
+    };
+
+    // --- NEW component: LaunchModal ---
+    const LaunchModal = ({ isOpen, onClose, idData, config, onConfigChange }) => {
+        if (!isOpen || !idData) return null;
+
+        const [generatedCommand, setGeneratedCommand] = useState('');
+        const [copied, setCopied] = useState(false);
+
+        const generateAndCopyCommand = () => {
+            if (!config.command) {
+                setGeneratedCommand('// Please enter an application command first.');
+                return;
+            }
+            const varName = config.varName || 'MOCK_MACHINE_ID';
+            const id = idData.id;
+            let cmd = '';
+            if (config.os === 'mac_linux') {
+                cmd = `export ${varName}="${id}" && ${config.command}`;
+            } else { // windows
+                cmd = `$env:${varName} = "${id}"; ${config.command}`;
+            }
+            setGeneratedCommand(cmd);
+            navigator.clipboard.writeText(cmd);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+        };
+
+        const handleConfigChange = (field, value) => {
+            onConfigChange({ ...config, [field]: value });
+        };
+        
+        return React.createElement('div', { className: 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4', onClick: onClose },
+            React.createElement('div', { className: 'bg-secondary border border-gray-700 rounded-lg shadow-2xl w-full max-w-2xl mx-auto transform transition-all duration-300', onClick: e => e.stopPropagation() },
+                React.createElement('div', { className: 'p-6 border-b border-gray-800 flex justify-between items-center' },
+                    React.createElement('div', {className: 'flex items-center space-x-3'},
+                        React.createElement(RocketLaunchIcon, {className: 'h-6 w-6 text-accent'}),
+                        React.createElement('h2', { className: 'text-lg font-semibold text-text-primary' }, 'Automated Launch Helper')
+                    ),
+                    React.createElement('button', { onClick: onClose, className: 'text-text-secondary hover:text-white' }, React.createElement(XMarkIcon, { className: 'h-6 w-6'}))
+                ),
+                React.createElement('div', { className: 'p-6' },
+                    React.createElement('p', { className: 'text-sm text-text-secondary mb-4' }, `Configure the command to launch your application. The selected ID for `, React.createElement('strong', {className: 'text-accent'}, idData.name), ` will be injected as an environment variable.`),
+                    React.createElement('div', { className: 'space-y-4' },
+                        React.createElement('div', null, 
+                            React.createElement('label', { className: 'block text-sm font-medium text-text-secondary mb-1' }, '1. Select Operating System'),
+                            React.createElement('select', { value: config.os, onChange: e => handleConfigChange('os', e.target.value), className: 'w-full bg-primary border border-gray-700 rounded-md p-2 text-text-primary focus:ring-accent focus:border-accent' },
+                                React.createElement('option', { value: 'mac_linux' }, 'macOS / Linux (bash/zsh)'),
+                                React.createElement('option', { value: 'windows' }, 'Windows (PowerShell)')
+                            )
+                        ),
+                        React.createElement('div', null, 
+                            React.createElement('label', { className: 'block text-sm font-medium text-text-secondary mb-1' }, '2. Enter Your Application Launch Command'),
+                            React.createElement('input', { type: 'text', placeholder: 'e.g., python main.py or C:\\Users\\Test\\app.exe', value: config.command, onChange: e => handleConfigChange('command', e.target.value), className: 'w-full bg-primary border border-gray-700 rounded-md p-2 text-text-primary font-mono focus:ring-accent focus:border-accent' })
+                        ),
+                        React.createElement('div', null, 
+                            React.createElement('label', { className: 'block text-sm font-medium text-text-secondary mb-1' }, '3. Environment Variable Name (Optional)'),
+                            React.createElement('input', { type: 'text', value: config.varName, onChange: e => handleConfigChange('varName', e.target.value), className: 'w-full bg-primary border border-gray-700 rounded-md p-2 text-text-primary font-mono focus:ring-accent focus:border-accent' })
+                        )
+                    ),
+                    generatedCommand && React.createElement('div', { className: 'mt-6' },
+                        React.createElement('label', { className: 'block text-sm font-medium text-text-secondary mb-1' }, 'Generated Command'),
+                        React.createElement('div', { className: 'bg-primary p-3 rounded-md border border-gray-700' },
+                            React.createElement('pre', { className: 'text-sm text-text-secondary whitespace-pre-wrap' }, React.createElement('code', null, generatedCommand))
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'p-6 border-t border-gray-800 bg-primary/30' },
+                    React.createElement('button', { onClick: generateAndCopyCommand, className: 'w-full flex items-center justify-center bg-accent hover:bg-accent-hover text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed', disabled: !config.command },
+                        copied ? React.createElement(CheckCircleIcon, { className: 'h-5 w-5 mr-2' }) : React.createElement(CopyIcon, { className: 'h-5 w-5 mr-2' }),
+                        copied ? 'Copied to Clipboard!' : 'Generate & Copy Command'
+                    )
+                )
+            )
+        );
+    };
+
+    // --- From components/IDListItem.tsx ---
+    const CodeSnippet = ({ label, code }) => {
+        const [copied, setCopied] = useState(false);
+        const handleCopy = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+        return React.createElement('div', { className: 'mb-2' },
+            React.createElement('label', { className: 'block text-xs font-medium text-text-secondary mb-1' }, label),
+            React.createElement('div', { className: 'flex items-center bg-primary p-2 rounded-md border border-gray-700' },
+                React.createElement('pre', { className: 'text-xs text-text-secondary flex-grow truncate mr-2 font-mono' }, React.createElement('code', null, code)),
+                React.createElement('button', { onClick: handleCopy, className: 'text-text-secondary hover:text-white transition-colors duration-200' },
+                    copied ? React.createElement(CheckCircleIcon, { className: 'h-4 w-4 text-success' }) : React.createElement(CopyIcon, { className: 'h-4 w-4' })
+                )
+            )
+        );
+    };
+
+    const IDListItem = ({ idData, isActive, onActivate, onDelete, onUpdateName, onUpdateNotes, onLaunch }) => {
+        const [isEditingName, setIsEditingName] = useState(false);
+        const [name, setName] = useState(idData.name);
+        const [notes, setNotes] = useState(idData.notes);
+        const [copied, setCopied] = useState(false);
+        const [isExpanded, setIsExpanded] = useState(false);
+        const nameInputRef = useRef(null);
+        
+        useEffect(() => {
+            if (isEditingName && nameInputRef.current) {
+                nameInputRef.current.focus();
+            }
+        }, [isEditingName]);
+        
+        const handleNameUpdate = () => {
+            if (name.trim() !== '' && name.trim() !== idData.name) {
+                onUpdateName(idData.id, name.trim());
+            } else {
+                setName(idData.name);
+            }
+            setIsEditingName(false);
+        };
+        const handleNameKeyDown = (e) => {
+            if (e.key === 'Enter') handleNameUpdate();
+            else if (e.key === 'Escape') {
+                setName(idData.name);
+                setIsEditingName(false);
+            }
+        };
+        const handleNotesUpdate = () => {
+            if (notes !== idData.notes) {
+                onUpdateNotes(idData.id, notes);
+            }
+        };
+        const handleCopyId = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(idData.id);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+        
+        const mainContent = React.createElement('div', { className: 'flex items-center p-4 cursor-pointer', onClick: () => setIsExpanded(!isExpanded) },
+            React.createElement('div', { className: 'flex-grow min-w-0' },
+                isEditingName ?
+                React.createElement('input', { ref: nameInputRef, type: 'text', value: name, onClick: (e) => e.stopPropagation(), onChange: (e) => setName(e.target.value), onBlur: handleNameUpdate, onKeyDown: handleNameKeyDown, className: 'w-full bg-secondary border border-accent rounded-md p-1 text-sm text-text-primary' }) :
+                React.createElement('p', { className: 'font-semibold text-text-primary text-sm truncate' }, idData.name),
+                React.createElement('p', { className: 'text-xs text-text-secondary truncate mt-1 font-mono' }, idData.id)
+            ),
+            React.createElement('div', { className: 'flex items-center space-x-2 md:ml-4 flex-shrink-0' },
+                React.createElement('button', { 'aria-label': 'Launch with this ID', onClick: (e) => { e.stopPropagation(); onLaunch(idData.id); }, className: 'p-2 rounded-md bg-gray-700 hover:bg-accent text-text-secondary hover:text-white transition-colors duration-200' }, React.createElement(RocketLaunchIcon, { className: 'h-4 w-4' })),
+                React.createElement('button', { onClick: (e) => { e.stopPropagation(); onActivate(idData.id); }, disabled: isActive, className: `flex items-center text-xs font-bold py-2 px-3 rounded-md transition-colors duration-200 ${isActive ? 'bg-success text-white cursor-not-allowed' : 'bg-gray-700 hover:bg-accent text-text-secondary hover:text-white'}` },
+                    isActive ? React.createElement(CheckCircleIcon, { className: 'h-4 w-4 mr-1.5' }) : React.createElement(PowerIcon, { className: 'h-4 w-4 mr-1.5' }),
+                    isActive ? 'Active' : 'Set Active'
+                ),
+                React.createElement(ChevronDownIcon, { className: `h-5 w-5 text-text-secondary transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}` })
+            )
+        );
+
+        const expandedContent = isExpanded && React.createElement('div', { className: 'border-t border-gray-700 p-4 bg-secondary/30' },
+            React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                React.createElement('div', null,
+                    React.createElement('label', { className: 'block text-xs font-medium text-text-secondary mb-1' }, 'Notes'),
+                    React.createElement('textarea', { value: notes, onChange: (e) => setNotes(e.target.value), onBlur: handleNotesUpdate, placeholder: 'Add notes for this ID...', className: 'w-full h-24 bg-primary border border-gray-600 rounded-md p-2 text-sm text-text-primary focus:ring-accent focus:border-accent' })
+                ),
+                React.createElement('div', null,
+                    React.createElement('h4', { className: 'text-xs font-medium text-text-secondary mb-2 flex items-center' }, React.createElement(CodeIcon, { className: 'h-4 w-4 mr-2'}), 'Usage Snippets'),
+                    React.createElement(CodeSnippet, { label: 'Bash / Zsh', code: `export MOCK_MACHINE_ID="${idData.id}"` }),
+                    React.createElement(CodeSnippet, { label: 'PowerShell', code: `$env:MOCK_MACHINE_ID = "${idData.id}"` }),
+                    React.createElement(CodeSnippet, { label: 'Python', code: `os.environ['MOCK_MACHINE_ID'] = '${idData.id}'` })
+                )
+            ),
+            React.createElement('div', { className: 'flex justify-between items-center text-xs text-text-secondary mt-4 border-t border-gray-700 pt-3' },
+                React.createElement('div', { className: 'flex items-center space-x-2' },
+                    React.createElement('button', { 'aria-label': 'Edit Name', onClick: (e) => { e.stopPropagation(); setIsEditingName(true); }, className: 'p-2 hover:text-white rounded-full transition-colors duration-200' }, React.createElement(PencilIcon, { className: 'h-4 w-4' })),
+                    React.createElement('button', { 'aria-label': 'Delete ID', onClick: (e) => { e.stopPropagation(); onDelete(idData.id); }, className: 'p-2 hover:text-danger rounded-full transition-colors duration-200' }, React.createElement(TrashIcon, { className: 'h-4 w-4' })),
+                    React.createElement('button', { 'aria-label': 'Copy ID', onClick: handleCopyId, className: 'p-2 hover:text-white rounded-full transition-colors duration-200' }, copied ? React.createElement(CheckCircleIcon, { className: 'h-4 w-4 text-success' }) : React.createElement(CopyIcon, { className: 'h-4 w-4' }))
+                ),
+                React.createElement('span', { className: 'text-gray-500' }, `Created: ${new Date(idData.createdAt).toLocaleDateString()}`)
+            )
+        );
+        return React.createElement('li', { className: `bg-primary border rounded-lg transition-all duration-300 ${isActive ? 'border-accent shadow-lg shadow-accent/10' : 'border-gray-700'}` }, mainContent, expandedContent);
+    };
+
+    // --- From components/IDList.tsx ---
+    const IDList = ({ ids, activeId, onActivate, onDelete, onUpdateName, onUpdateNotes, onExport, onLaunch }) => {
+      return React.createElement('div', { className: 'bg-secondary border border-gray-800 rounded-lg shadow-lg h-full flex flex-col' },
+        React.createElement('div', { className: 'p-6 border-b border-gray-800 flex justify-between items-center' },
+          React.createElement('div', null,
+            React.createElement('h2', { className: 'text-lg font-semibold text-text-primary' }, 'Managed ID Assets'),
+            React.createElement('p', { className: 'text-sm text-text-secondary mt-1' }, 'All data is stored locally in your browser.')
+          ),
+          ids.length > 0 && React.createElement('button', { onClick: onExport, className: 'flex items-center space-x-2 text-sm bg-gray-700 hover:bg-accent text-text-secondary hover:text-white font-bold py-2 px-3 rounded-md transition-colors duration-200' }, 
+            React.createElement(DownloadIcon, { className: 'h-4 w-4'}),
+            React.createElement('span', null, 'Export JSON')
+          )
+        ),
+        React.createElement('div', { className: 'p-2 md:p-4 flex-grow overflow-y-auto' },
+          ids.length > 0 ?
+          React.createElement('ul', { className: 'space-y-3' }, ids.map((id) =>
+            React.createElement(IDListItem, { key: id.id, idData: id, isActive: id.id === activeId, onActivate, onDelete, onUpdateName, onUpdateNotes, onLaunch })
+          )) :
+          React.createElement('div', { className: 'text-center py-16 px-6 flex flex-col items-center justify-center h-full' },
+            React.createElement(ShieldCheckIcon, { className: 'h-12 w-12 mx-auto text-gray-600' }),
+            React.createElement('h3', { className: 'mt-2 text-md font-semibold text-text-secondary' }, 'No Assets Generated'),
+            React.createElement('p', { className: 'mt-1 text-sm text-gray-500' }, 'Use the generator to create new machine IDs.')
+          )
+        )
+      );
+    };
+
+    // --- From App.tsx ---
+    const App = () => {
+      const generateUUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+      const [realId, setRealId] = useState('');
+      const [spoofedIds, setSpoofedIds] = useState([]);
+      const [activeSpoofedId, setActiveSpoofedId] = useState(null);
+      const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
+      const [launchTargetId, setLaunchTargetId] = useState(null);
+      const [launchConfig, setLaunchConfig] = useState({
+        os: 'mac_linux', command: '', varName: 'MOCK_MACHINE_ID'
+      });
+      
+      useEffect(() => {
+        const storedRealId = localStorage.getItem('realMachineId');
+        if (storedRealId) {
+          setRealId(storedRealId);
+        } else {
+          const newRealId = generateUUID();
+          setRealId(newRealId);
+          localStorage.setItem('realMachineId', newRealId);
+        }
+        
+        const storedSpoofedIds = localStorage.getItem('spoofedIds');
+        if(storedSpoofedIds) {
+          try { setSpoofedIds(JSON.parse(storedSpoofedIds)); } catch(e) { setSpoofedIds([]); }
+        }
+
+        const storedLaunchConfig = localStorage.getItem('launchConfig');
+        if (storedLaunchConfig) {
+            try { setLaunchConfig(JSON.parse(storedLaunchConfig)); } catch (e) { /* use default */ }
+        }
+      }, []);
+
+      useEffect(() => {
+          localStorage.setItem('spoofedIds', JSON.stringify(spoofedIds));
+      }, [spoofedIds]);
+
+      useEffect(() => {
+          localStorage.setItem('launchConfig', JSON.stringify(launchConfig));
+      }, [launchConfig]);
+
+      const handleGenerateIds = useCallback((count) => {
+        const newIds = Array.from({ length: count }, (_, i) => ({
+          id: generateUUID(),
+          name: `Generated ID #${spoofedIds.length + i + 1}`,
+          createdAt: new Date().toISOString(),
+          notes: '',
+        }));
+        setSpoofedIds((prevIds) => [...newIds, ...prevIds]);
+      }, [spoofedIds.length]);
+
+      const handleDeleteId = useCallback((idToDelete) => {
+        setSpoofedIds((prevIds) => prevIds.filter((id) => id.id !== idToDelete));
+        if (activeSpoofedId === idToDelete) {
+          setActiveSpoofedId(null);
+        }
+      }, [activeSpoofedId]);
+
+      const handleUpdateIdName = useCallback((idToUpdate, newName) => {
+        setSpoofedIds((prevIds) => prevIds.map((id) => id.id === idToUpdate ? { ...id, name: newName } : id));
+      }, []);
+
+      const handleUpdateIdNotes = useCallback((idToUpdate, newNotes) => {
+        setSpoofedIds((prevIds) => prevIds.map((id) => id.id === idToUpdate ? { ...id, notes: newNotes } : id));
+      }, []);
+
+      const handleExport = useCallback(() => {
+        const dataStr = JSON.stringify(spoofedIds, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'spoofed_ids_export.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, [spoofedIds]);
+      
+      const handleOpenLaunchModal = useCallback((id) => {
+        setLaunchTargetId(id);
+        setIsLaunchModalOpen(true);
+      }, []);
+
+      const isSpoofing = !!activeSpoofedId;
+      const currentDisplayId = isSpoofing ? activeSpoofedId : realId;
+      const launchIdData = spoofedIds.find(id => id.id === launchTargetId);
+
+      return React.createElement('div', { className: 'min-h-screen bg-primary' },
+        React.createElement(Header, null),
+        React.createElement('main', { className: 'container mx-auto p-4 md:p-8' },
+          React.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-3 gap-8' },
+            React.createElement('div', { className: 'lg:col-span-1 flex flex-col gap-8' },
+              React.createElement(CurrentIDCard, { currentId: currentDisplayId, isSpoofing, onStopSpoofing: () => setActiveSpoofedId(null), realId }),
+              React.createElement(IDGenerator, { onGenerate: handleGenerateIds })
+            ),
+            React.createElement('div', { className: 'lg:col-span-2' },
+              React.createElement(IDList, { ids: spoofedIds, activeId: activeSpoofedId, onActivate: setActiveSpoofedId, onDelete: handleDeleteId, onUpdateName: handleUpdateIdName, onUpdateNotes: handleUpdateIdNotes, onExport: handleExport, onLaunch: handleOpenLaunchModal })
+            )
+          )
+        ),
+        React.createElement(LaunchModal, { isOpen: isLaunchModalOpen, onClose: () => setIsLaunchModalOpen(false), idData: launchIdData, config: launchConfig, onConfigChange: setLaunchConfig })
+      );
+    };
+
+    // --- From index.tsx ---
+    const rootElement = document.getElementById('root');
+    if (!rootElement) {
+      throw new Error("Could not find root element to mount to");
+    }
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(React.createElement(React.StrictMode, null, React.createElement(App, null)));
+  </script>
+</body>
+</html>
